@@ -1,0 +1,50 @@
+# pyproject.toml
+
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "unsealer"
+version = "1.0.1"
+authors = [
+  { name="Chase Chen", email="eldric520lol@gmail.com" },
+]
+description = "A multi-module tool that allows you to retrieve your digital credentials from services like Samsung Pass and Google Authenticator, and convert between them."
+readme = "README.md"
+requires-python = ">=3.7"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Topic :: Security :: Cryptography",
+    "Topic :: Utilities",
+    "Environment :: Console",
+]
+keywords = ["samsung", "google", "authenticator",".spass", "decrypt", "password", "manager", "export",]
+
+dependencies = [
+    "pycryptodome>=3.15.0",
+    "rich",
+    "pyfiglet",
+    "protobuf",
+]
+
+[project.scripts]
+unsealer = "unsealer.__main__:main"
+
+[project.urls]
+Homepage = "https://github.com/Oracipher/Unsealer"
+"Bug Tracker" = "https://github.com/Oracipher/Unsealer/issues"
+
+
+# 打包工具
+[tool.setuptools.package-data]
+"unsealer.samsung" = ["*.json"]
+
+[project.optional-dependencies]
+test = [
+    "pytest",
+    "pytest-mock",
+    "pytest-cov",
+]
