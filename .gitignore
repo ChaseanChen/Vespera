@@ -8,3 +8,10 @@ draft/
 
 env/
 .env
+
+./__pycache__/
+
+./src/unsealer.egg-info/
+
+__pycache__/
+
