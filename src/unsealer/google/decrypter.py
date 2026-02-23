@@ -3,7 +3,9 @@ from urllib.parse import urlparse, parse_qs
 from typing import List, Dict, Any
 
 def _parse_varint(data, pos):
-    """解析 Protobuf 的 Varint 编码"""
+    """
+    解析 Protobuf 的 Varint 编码
+    """
     res = 0
     shift = 0
     while True:
@@ -15,7 +17,9 @@ def _parse_varint(data, pos):
         shift += 7
 
 def _parse_message(data):
-    """简易 Protobuf 逻辑解析器：将二进制流解析为 Tag 字典"""
+    """
+    简易 Protobuf 逻辑解析器：将二进制流解析为 Tag 字典
+    """
     pos = 0
     res = {}
     while pos < len(data):
@@ -65,7 +69,7 @@ def decrypt_google_auth_uri(uri: str) -> List[Dict[str, Any]]:
             # 解析内层 OtpParameters 消息
             otp_dict = _parse_message(raw_otp)
             
-            # 提取字段 (Tag 对应 .proto 文件中的序号)
+            # 提取字段
             # 1: secret, 2: name, 3: issuer, 4: algorithm, 5: digits, 6: type
             secret = otp_dict.get(1, [b''])[0]
             name = otp_dict.get(2, [b'Unknown'])[0].decode('utf-8')

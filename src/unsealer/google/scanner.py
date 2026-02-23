@@ -23,7 +23,7 @@ def extract_uris_from_path(path_str: str) -> Set[str]:
             continue
         try:
             with Image.open(f) as img:
-                # 预处理：提高黑白对比度有助于扫码
+                # 提高黑白对比度
                 decoded = decode(img.convert('L'))
                 for obj in decoded:
                     content = obj.data.decode('utf-8')

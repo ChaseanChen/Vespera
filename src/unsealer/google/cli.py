@@ -8,16 +8,16 @@ from rich.console import Console
 from rich.table import Table
 from rich.panel import Panel
 from rich.prompt import Prompt
-
-# 内部模块导入
 from .decrypter import decrypt_google_auth_uri
 from .scanner import extract_uris_from_path
 
-# 初始化控制台（错误流输出，不干扰管道）
+# 初始化控制台
 console = Console(stderr=True)
 
 def _save_report(accounts, output_path: Path):
-    """将结果保存为 Markdown 格式"""
+    """
+    将结果保存为 Markdown 格式
+    """
     content = [
         "# Google Authenticator 导出报告",
         f"- **生成时间**: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}",
@@ -40,16 +40,16 @@ def main():
     parser = argparse.ArgumentParser(
         description="Google Authenticator 迁移数据提取工具 (免 Protobuf 编译版)"
     )
-    # 接受多个输入：URI 字符串、图片文件或包含二维码的文件夹
+    
     parser.add_argument("inputs", nargs="*", help="URI 字符串、二维码图片路径或目录")
     parser.add_argument("-o", "--output", type=Path, help="导出 Markdown 报告的文件路径")
     
-    # 接收来自 __main__.py 的参数分发 (sys.argv[2:])
+    # 接收来自 __main__.py 的参数分发
     args = parser.parse_args(sys.argv[2:])
 
     final_uris = set()
 
-    # 1. 第一步：处理命令行直接提供的输入
+    # 1.处理命令行直接提供的输入
     if args.inputs:
         with console.status("[bold green]正在扫描输入源..."):
             for item in args.inputs:
@@ -60,7 +60,7 @@ def main():
                     uris_found = extract_uris_from_path(item)
                     final_uris.update(uris_found)
     
-    # 2. 第二步：交互模式（如果没有任何输入）
+    # 2. 交互模式
     if not final_uris:
         console.print(Panel(
             "未检测到输入数据。您可以：\n"
@@ -89,20 +89,20 @@ def main():
         console.print("[bold red]错误: 没有找到任何可处理的 Google 迁移数据。[/]")
         return
 
-    # 3. 第三步：解密与去重
+    # 3. 解密与去重
     all_accounts_map = {}
     try:
         with console.status("[bold green]正在解密多批次数据..."):
             for uri in final_uris:
                 accounts = decrypt_google_auth_uri(uri)
                 for acc in accounts:
-                    # 使用 secret 作为 key 进行去重，防止多次扫描同一二维码
+                    # 使用 secret 作为 key 进行去重
                     all_accounts_map[acc['totp_secret']] = acc
 
         # 按服务商名称排序
         final_accounts = sorted(all_accounts_map.values(), key=lambda x: x['issuer'].lower())
 
-        # 4. 第四步：展示结果表格
+        # 4. 展示结果表格
         if not final_accounts:
             console.print("[yellow]解析完成，但未发现有效的账户数据。[/yellow]")
             return
@@ -127,7 +127,7 @@ def main():
         
         console.print("\n", table)
 
-        # 5. 第五步：执行导出逻辑
+        # 5. 执行导出逻辑
         if args.output:
             _save_report(final_accounts, args.output)
         else:
