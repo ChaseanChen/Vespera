@@ -1,36 +1,37 @@
 # src/unsealer/__main__.py
 
-import sys # 处理和电脑系统相关的内容
-import argparse # 用于理解命令行指令
+import sys
+import argparse
 import traceback
 
-
-# --- 导入处理 --- #
+# --- Import Handling ---
 try:
+    # Attempt to import sub-modules for command dispatching
     from unsealer.samsung import cli as samsung_cli
     from unsealer.google import cli as google_cli
 except ImportError as e:
-    print("--- Debug Info ---", file = sys.stderr)
+    # Print detailed debugging information to stderr if imports fail
+    print("--- Debug Information ---", file=sys.stderr)
     traceback.print_exc()
-    print("------------------", file = sys.stderr)
+    print("-------------------------", file=sys.stderr)
     
     print(
         f"Fatal Error: Could not import a required submodule.\n"
-        f"Please ensure your project structure is correct.\nDetails: {e}",
+        f"Please ensure the project structure is correct and dependencies are installed.\n"
+        f"Details: {e}",
         file=sys.stderr
     )
-    
     sys.exit(1)
-    
+
 def main():
-    # 1. Create the parser
+    # 1. Initialize the primary ArgumentParser
     parser = argparse.ArgumentParser(
         prog="unsealer",
-        description="A tool to reclaim your digital credentials.",
+        description="A powerful, multi-module tool to reclaim your digital credentials.",
         epilog="Use 'unsealer <command> --help' for more information on a specific command."
     )
 
-    # 2. Create a subparser object to handle the commands
+    # 2. Define subparsers for different modules
     subparsers = parser.add_subparsers(
         title="Available Modules",
         dest="command",
@@ -38,22 +39,24 @@ def main():
         metavar="<command>"
     )
 
-    # 3. Register the 'samsung' command
+    # 3. Register the 'samsung' module command
     subparsers.add_parser(
         "samsung",
-        help="Decrypt data from Samsung Pass (.spass) backups.",
-        description="A tool for decrypting Samsung Pass (.spass) backup files."
+        help="Decrypt and export data from Samsung Pass (.spass) backups.",
+        description="A specialized module for decrypting and parsing Samsung Pass (.spass) backup files."
     )
 
-    # 4. Register the 'google' command
+    # 4. Register the 'google' module command
     subparsers.add_parser(
         "google",
-        help="Decrypt and extract 2FA accounts from a Google Authenticator export URI.",
-        description="For decrypting Google Authenticator 'otpauth-migration://' URIs."
+        help="Decrypt and extract 2FA accounts from Google Authenticator export URIs.",
+        description="A specialized module for processing 'otpauth-migration://' URIs from Google Authenticator."
     )
 
     # --- Command Dispatching Logic ---
 
+    # Only parse the first argument to determine which module to invoke.
+    # The remaining arguments will be handled by the respective module's CLI.
     args = parser.parse_args(sys.argv[1:2])
 
     if args.command == "samsung":
@@ -61,9 +64,8 @@ def main():
     elif args.command == "google":
         google_cli.main()
     else:
+        # Fallback: display help if an invalid command is reached
         parser.print_help()
-        
-
 
 if __name__ == "__main__":
     main()

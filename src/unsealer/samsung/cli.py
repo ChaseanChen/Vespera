@@ -21,48 +21,48 @@ console = Console(stderr=True)
 
 def _format_logins_txt(data: List[Dict]) -> str:
     content = [
-        f"====================\n Login Credentials ({len(data)} items)\n===================="
+        f"====================\n [Logins] Credentials ({len(data)} items)\n===================="
     ]
     for i, entry in enumerate(data, 1):
-        content.append(f"\n--- [ {i}. {entry.get('title', '未知条目')} ] ---")
-        content.append(f"{'用户名:':<10} {entry.get('username_value', 'N/A')}")
-        content.append(f"{'密码:':<10} {entry.get('password_value', 'N/A')}")
+        content.append(f"\n--- [ {i}. {entry.get('title', 'Unknown Entry')} ] ---")
+        content.append(f"{'Username:':<12} {entry.get('username_value', 'N/A')}")
+        content.append(f"{'Password:':<12} {entry.get('password_value', 'N/A')}")
         if url := entry.get("origin_url"):
-            content.append(f"{'网址/应用:':<10} {url}")
+            content.append(f"{'URL/App:':<12} {url}")
         if memo := entry.get("credential_memo"):
-            content.append(f"{'备注:':<10} {memo}")
+            content.append(f"{'Memo:':<12} {memo}")
         if isinstance(otp := entry.get("otp"), dict) and otp.get("secret"):
-            content.append(f"\n  [!!] 两步验证 (2FA) 密钥:")
-            content.append(f"    {'密钥:':<8} {otp.get('secret')}")
-            content.append(f"    {'账户:':<8} {otp.get('name', 'N/A')}")
+            content.append(f"\n  [!!] 2FA/OTP Secret:")
+            content.append(f"    {'Secret:':<10} {otp.get('secret')}")
+            content.append(f"    {'Account:':<10} {otp.get('name', 'N/A')}")
     return "\n".join(content)
 
 
 def _format_identities_txt(data: List[Dict]) -> str:
     content = [
-        f"\n\n=======================\n Identities Info ({len(data)} items)\n======================="
+        f"\n\n=======================\n [Identities] Info ({len(data)} items)\n======================="
     ]
     for i, entry in enumerate(data, 1):
-        content.append(f"\n--- [ {i}. {entry.get('name', '未知身份')} ] ---")
+        content.append(f"\n--- [ {i}. {entry.get('name', 'Unknown Identity')} ] ---")
         if isinstance(id_card := entry.get("id_card_detail"), dict):
-            content.append(f"{'身份证号:':<10} {id_card.get('mIDCardNumber', 'N/A')}")
-            content.append(f"{'姓名:':<10} {id_card.get('mUsername', 'N/A')}")
-            content.append(f"{'出生日期:':<10} {id_card.get('mBirthDay', 'N/A')}")
+            content.append(f"{'ID Number:':<12} {id_card.get('mIDCardNumber', 'N/A')}")
+            content.append(f"{'Full Name:':<12} {id_card.get('mUsername', 'N/A')}")
+            content.append(f"{'Birth Date:':<12} {id_card.get('mBirthDay', 'N/A')}")
         if phones := entry.get("telephone_number_list"):
-            content.append(f"{'电话:':<10} {', '.join(phones)}")
+            content.append(f"{'Phone:':<12} {', '.join(phones)}")
         if emails := entry.get("email_address_list"):
-            content.append(f"{'邮箱:':<10} {', '.join(emails)}")
+            content.append(f"{'Email:':<12} {', '.join(emails)}")
     return "\n".join(content)
 
 
 def _format_addresses_txt(data: List[Dict]) -> str:
     content = [
-        f"\n\n=====================\n Addresses Info ({len(data)} items)\n====================="
+        f"\n\n=====================\n [Addresses] Info ({len(data)} items)\n====================="
     ]
     for i, entry in enumerate(data, 1):
-        name = entry.get("full_name", f"地址 {i}")
-        if name == "添加地址/名称":
-            name = f"地址 {i} (模板)"
+        name = entry.get("full_name", f"Address {i}")
+        if name == "Add Address/Name":
+            name = f"Address {i} (Template)"
         content.append(f"\n--- [ {i}. {name} ] ---")
         addr_parts = [
             entry.get(k)
@@ -70,17 +70,17 @@ def _format_addresses_txt(data: List[Dict]) -> str:
         ]
         full_address = ", ".join(filter(None, addr_parts))
         if full_address:
-            content.append(f"{'地址:':<10} {full_address}")
+            content.append(f"{'Address:':<12} {full_address}")
         if phone := entry.get("phone_number"):
-            content.append(f"{'电话:':<10} {phone}")
+            content.append(f"{'Phone:':<12} {phone}")
         if email := entry.get("email"):
-            content.append(f"{'邮箱:':<10} {email}")
+            content.append(f"{'Email:':<12} {email}")
     return "\n".join(content)
 
 
 def _format_notes_txt(data: List[Dict]) -> str:
     content = [
-        f"\n\n======================\n Notes ({len(data)} items)\n======================"
+        f"\n\n======================\n [Notes] Secure Memos ({len(data)} items)\n======================"
     ]
     for i, entry in enumerate(data, 1):
         content.append(
@@ -92,45 +92,45 @@ def _format_notes_txt(data: List[Dict]) -> str:
 
 # --- Markdown Custom Formatter --- # 
 def _format_logins_md(data: List[Dict]) -> str:
-    content = [f"## [登录凭证] Logins - 共 {len(data)} 条\n"]
+    content = [f"## [Logins] Credentials - Total {len(data)} items\n"]
     for i, entry in enumerate(data, 1):
-        content.append(f"### {i}. {entry.get('title', '未知条目')}")
-        content.append(f"- **用户名**: `{entry.get('username_value', 'N/A')}`")
-        content.append(f"- **密码**: `{entry.get('password_value', 'N/A')}`")
+        content.append(f"### {i}. {entry.get('title', 'Unknown Entry')}")
+        content.append(f"- **Username**: `{entry.get('username_value', 'N/A')}`")
+        content.append(f"- **Password**: `{entry.get('password_value', 'N/A')}`")
         if url := entry.get("origin_url"):
-            content.append(f"- **网址/应用**: `{url}`")
+            content.append(f"- **URL/App**: `{url}`")
         if memo := entry.get("credential_memo"):
-            content.append(f"- **备注**: {memo}")
+            content.append(f"- **Memo**: {memo}")
         if isinstance(otp := entry.get("otp"), dict) and otp.get("secret"):
-            content.append("- **[!] 两步验证 (2FA) 密钥**: ")
-            content.append(f"  - **密钥 (Secret)**: `{otp.get('secret')}`")
-            content.append(f"  - **账户**: `{otp.get('name', 'N/A')}`")
+            content.append("- **[!] 2FA/OTP Secret**: ")
+            content.append(f"  - **Secret**: `{otp.get('secret')}`")
+            content.append(f"  - **Account**: `{otp.get('name', 'N/A')}`")
         content.append("\n---\n")
     return "\n".join(content)
 
 
 def _format_identities_md(data: List[Dict]) -> str:
-    content = [f"## [身份信息] Identities - 共 {len(data)} 条\n"]
+    content = [f"## [Identities] Information - Total {len(data)} items\n"]
     for i, entry in enumerate(data, 1):
-        content.append(f"### {i}. {entry.get('name', '未知身份')}")
+        content.append(f"### {i}. {entry.get('name', 'Unknown Identity')}")
         if isinstance(id_card := entry.get("id_card_detail"), dict):
-            content.append(f"- **身份证号**: `{id_card.get('mIDCardNumber', 'N/A')}`")
-            content.append(f"- **姓名**: `{id_card.get('mUsername', 'N/A')}`")
-            content.append(f"- **出生日期**: `{id_card.get('mBirthDay', 'N/A')}`")
+            content.append(f"- **ID Number**: `{id_card.get('mIDCardNumber', 'N/A')}`")
+            content.append(f"- **Full Name**: `{id_card.get('mUsername', 'N/A')}`")
+            content.append(f"- **Birth Date**: `{id_card.get('mBirthDay', 'N/A')}`")
         if phones := entry.get("telephone_number_list"):
-            content.append(f"- **电话**: {', '.join([f'`{p}`' for p in phones])}")
+            content.append(f"- **Phone**: {', '.join([f'`{p}`' for p in phones])}")
         if emails := entry.get("email_address_list"):
-            content.append(f"- **邮箱**: {', '.join([f'`{e}`' for e in emails])}")
+            content.append(f"- **Email**: {', '.join([f'`{e}`' for e in emails])}")
         content.append("\n---\n")
     return "\n".join(content)
 
 
 def _format_addresses_md(data: List[Dict]) -> str:
-    content = [f"## [地址信息] Addresses - 共 {len(data)} 条\n"]
+    content = [f"## [Addresses] Information - Total {len(data)} items\n"]
     for i, entry in enumerate(data, 1):
-        name = entry.get("full_name", f"地址 {i}")
-        if name == "添加地址/名称":
-            name = f"地址 {i} (模板)"
+        name = entry.get("full_name", f"Address {i}")
+        if name == "Add Address/Name":
+            name = f"Address {i} (Template)"
         content.append(f"### {i}. {name}")
         addr_parts = [
             entry.get(k)
@@ -138,17 +138,17 @@ def _format_addresses_md(data: List[Dict]) -> str:
         ]
         full_address = ", ".join(filter(None, addr_parts))
         if full_address:
-            content.append(f"- **地址**: {full_address}")
+            content.append(f"- **Full Address**: {full_address}")
         if phone := entry.get("phone_number"):
-            content.append(f"- **电话**: `{phone}`")
+            content.append(f"- **Phone**: `{phone}`")
         if email := entry.get("email"):
-            content.append(f"- **邮箱**: `{email}`")
+            content.append(f"- **Email**: `{email}`")
         content.append("\n---\n")
     return "\n".join(content)
 
 
 def _format_notes_md(data: List[Dict]) -> str:
-    content = [f"## [Security Memo] Notes - Total {len(data)} notes\n"]
+    content = [f"## [Notes] Secure Memos - Total {len(data)} items\n"]
     for i, entry in enumerate(data, 1):
         content.append(f"### {i}. {entry.get('note_title', 'Untitled Memo')}")
         content.append(f"```\n{entry.get('note_detail', '')}\n```")
@@ -177,19 +177,17 @@ def save_as_md(data: Dict[str, List[Any]], output_file: Path, banner: str):
             f.write(f"```\n{modified_banner}\n```\n\n")
             
         f.write("# Unsealer Comprehensive Decryption Report\n\n")
-        f.write(f"- **Generate time**: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n\n")
+        f.write(f"- **Generation Time**: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
         f.write(f"- **Data Summary**: A total of **{len(data)}** data categories were found.\n\n")
         f.write(
-            "**[!] Security Warning: This file contains extremely sensitive security and privacy information.**\n\n"
-        )
-        f.write(
-            "**Please view it in a secure environment and keep it safe !**"
+            "**[!] SECURITY WARNING: This file contains highly sensitive information (passwords, 2FA keys, etc.).\n"
+            "Please store it in an encrypted location and never share it!**\n\n"
         )
         for table_name in sorted_tables:
             formatter = MD_FORMATTERS.get(table_name)
             if formatter:
                 f.write(formatter(data[table_name]))
-        f.write(f"\n*Report generated by Vespera unsealer*")
+        f.write(f"\n*Report generated by Unsealer*")
 
 
 def save_as_txt(data: Dict[str, List[Any]], output_file: Path, banner: str):
@@ -206,22 +204,22 @@ def save_as_txt(data: Dict[str, List[Any]], output_file: Path, banner: str):
     with open(output_file, "w", encoding="utf-8") as f:
         if banner:
             f.write(f"{banner}\n")
-        f.write("Unsealer 综合解密报告\n")
-        f.write("------------------------\n")
-        f.write(f"Generate time:{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
-        f.write(f"Data Summary: A total of {len(data)} data categories were found.\n\n")
-        f.write("!!!!!!!! Security Warning !!!!!!!!\nThis file contains extremely sensitive information.\n\n")
-        f.write("Please keep it safe!\n\n")
+        f.write("Unsealer Comprehensive Decryption Report\n")
+        f.write("------------------------------------------\n")
+        f.write(f"Generation Time: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
+        f.write(f"Data Summary: Found {len(data)} data categories.\n\n")
+        f.write("!!!!!!!! SECURITY WARNING !!!!!!!!\n")
+        f.write("This file contains extremely sensitive information. Keep it safe!\n\n")
         for table_name in sorted_tables:
             formatter = TXT_FORMATTERS.get(table_name)
             if formatter:
                 f.write(formatter(data[table_name]))
-        f.write(f"\n\n--- 报告结束 ---\n*由 Unsealer 生成*")
+        f.write(f"\n\n--- END OF REPORT ---\n*Generated by Unsealer*")
 
 
 def save_as_csv(data: dict, output_path: Path):
     """
-    将每个数据类别保存为独立的CSV文件，并对嵌套数据进行展平处理
+    Save each data category as an independent CSV file and flatten nested data.
     """
     output_path.mkdir(exist_ok=True)
 
@@ -252,7 +250,7 @@ def save_as_csv(data: dict, output_path: Path):
 
 def _sanitize_filename(name: str) -> str:
     """
-    移除或替换在文件名/目录名中非法的字符
+    Remove or replace illegal characters in filenames/directories.
     """
     return re.sub(r'[\\/*?:"<>|]', "_", name)
 
@@ -273,20 +271,20 @@ def _display_banner() -> str:
 
 def _setup_arg_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        description="An elegant tool for decrypting Samsung codebook (.spass) files."
+        description="An elegant tool for decrypting Samsung Pass (.spass) backup files."
     )
-    parser.add_argument("input_file", type=Path, help="The path to the .spass file.")
+    parser.add_argument("input_file", type=Path, help="Path to the input .spass file.")
     parser.add_argument(
         "-f",
         "--format",
         choices=["md", "txt", "csv"],
         default="md",
-        help="Output file format (default: md).",
+        help="Output format (default: md).",
     )
-    parser.add_argument("-o", "--output", type=Path, help="The path or directory of the output file.")
-    parser.add_argument("--preview", action="store_true", help="Preview the summary information in the terminal.")
+    parser.add_argument("-o", "--output", type=Path, help="Destination path or directory for the output.")
+    parser.add_argument("--preview", action="store_true", help="Display summary in terminal without saving.")
     parser.add_argument(
-        "-y", "--force", action="store_true", help="Force overwrite existing output files or directories."
+        "-y", "--force", action="store_true", help="Force overwrite if output already exists."
     )
     return parser
 
@@ -297,56 +295,54 @@ def _process_decryption(
     try:
         file_content = args.input_file.read_bytes()
         with console.status(
-            "[bold green]正在解密与深度提炼数据...[/bold green]", spinner="dots"
+            "[bold green]Decrypting and refining data...[/bold green]", spinner="dots"
         ):
             all_tables = decrypt_and_parse(file_content, password)
 
         TABLE_NAMES = {
-            "logins": "Login credentials",
-            "identities": "Identity information",
-            "addresses": "Address Information",
-            "notes": "Security Memo",
+            "logins": "Login Credentials",
+            "identities": "Identity Info",
+            "addresses": "Address Info",
+            "notes": "Secure Memos",
         }
         summary = Text()
         for name, data in all_tables.items():
-            display_name = TABLE_NAMES.get(name, "Other data")
-            summary.append(f"✓ [cyan]{display_name}[/cyan]: 找到 {len(data)} 条目\n")
+            display_name = TABLE_NAMES.get(name, "Other Data")
+            summary.append(f"✓ [cyan]{display_name}[/cyan]: Found {len(data)} entries\n")
 
         console.print(
             Panel(
                 summary,
-                title="[bold green]✓ 解密成功[/bold green]",
+                title="[bold green]✓ Decryption Successful[/bold green]",
                 border_style="green",
             )
         )
 
         if args.preview:
-            console.print("[dim]> 预览模式不会保存文件。使用 -f 和 -o 参数导出。[/dim]")
+            console.print("[dim]> Preview mode: No files will be saved. Use -f and -o to export data.[/dim]")
             return
 
         console.print(
-            f"[cyan]> [/cyan]正在保存到 [bold magenta]{args.output}[/bold magenta] (格式: [yellow]{args.format.upper()}[/yellow])..."
+            f"[cyan]> [/cyan]Saving to [bold magenta]{args.output}[/bold magenta] (Format: [yellow]{args.format.upper()}[/yellow])..."
         )
 
         save_dispatch = {
             "md": lambda data, path, banner: save_as_md(data, path, banner),
             "txt": lambda data, path, banner: save_as_txt(data, path, banner),
-            "csv": lambda data, path, banner: save_as_csv(
-                data, path
-            ),
+            "csv": lambda data, path, banner: save_as_csv(data, path),
         }
         save_dispatch[args.format](all_tables, args.output, plain_banner)
 
         console.print(
-            f"\n[bold green]✓ 操作成功！[/bold green] 数据已保存至 [bold magenta]{args.output}[/bold magenta]"
+            f"\n[bold green]✓ Success![/bold green] Data exported to [bold magenta]{args.output}[/bold magenta]"
         )
 
     except (FileNotFoundError, ValueError) as e:
-        console.print(f"[bold red]✗ 错误:[/bold red] {e}")
+        console.print(f"[bold red]✗ Error:[/bold red] {e}")
         sys.exit(1)
     except Exception:
         console.print(
-            f"[bold red]✗ 发生未知内部错误。[/bold red] 详情已记录到 `unsealer_error.log` 文件中。"
+            f"[bold red]✗ An unexpected internal error occurred.[/bold red] Details saved to `unsealer_error.log`."
         )
         with open("unsealer_error.log", "a", encoding="utf-8") as f:
             f.write(f"--- {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} ---\n")
@@ -359,10 +355,11 @@ def main():
     plain_banner = _display_banner()
     parser = _setup_arg_parser()
     
+    # sys.argv[2:] assumes this is called from the main dispatcher
     args = parser.parse_args(sys.argv[2:])
 
     password = Prompt.ask(
-        "[bold yellow]> [/bold yellow]请输入您的三星账户主密码", password=True
+        "[bold yellow]> [/bold yellow]Enter your Samsung account master password", password=True
     )
 
     if not args.output and not args.preview:
@@ -377,15 +374,15 @@ def main():
             if args.format == "csv" and args.output.is_dir():
                 if any(args.output.iterdir()):
                     console.print(
-                        f"[bold red]✗ 错误:[/bold red] 输出目录 '{args.output}' 已存在且非空。"
+                        f"[bold red]✗ Error:[/bold red] Output directory '{args.output}' already exists and is not empty."
                     )
-                    console.print(f"请使用 '-y' 或 '--force' 标志进行覆盖。")
+                    console.print(f"Use '-y' or '--force' to overwrite.")
                     sys.exit(1)
             elif args.output.is_file():
                 console.print(
-                    f"[bold red]✗ 错误:[/bold red] 输出文件 '{args.output}' 已存在。"
+                    f"[bold red]✗ Error:[/bold red] Output file '{args.output}' already exists."
                 )
-                console.print(f"请使用 '-y' 或 '--force' 标志进行覆盖。")
+                console.print(f"Use '-y' or '--force' to overwrite.")
                 sys.exit(1)
 
     _process_decryption(args, password, plain_banner)
