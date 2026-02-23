@@ -1,5 +1,3 @@
-# src/unsealer/google/cli.py
-
 import sys
 import argparse
 from pathlib import Path
@@ -11,17 +9,17 @@ from rich.prompt import Prompt
 from .decrypter import decrypt_google_auth_uri
 from .scanner import extract_uris_from_path
 
-# 初始化控制台
+# Initialize console for standard error to keep stdout clean for piping
 console = Console(stderr=True)
 
-def _save_report(accounts, output_path: Path):
+def _save_report(accounts: list, output_path: Path):
     """
-    将结果保存为 Markdown 格式
+    Saves the extracted account information to a Markdown report.
     """
     content = [
-        "# Google Authenticator 导出报告",
-        f"- **生成时间**: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}",
-        "\n| 序号 | 发行者 (Issuer) | 账号名称 (Name) | 密钥 (Base32 Secret) | 算法 | 位数 |",
+        "# Google Authenticator Export Report",
+        f"- **Generated at**: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}",
+        "\n| No. | Issuer | Account Name | Secret (Base32) | Algorithm | Digits |",
         "| :--- | :--- | :--- | :--- | :--- | :--- |"
     ]
     for i, acc in enumerate(accounts, 1):
@@ -32,47 +30,47 @@ def _save_report(accounts, output_path: Path):
     
     try:
         output_path.write_text("\n".join(content), encoding="utf-8")
-        console.print(f"\n[bold green]✓[/] 报告已成功保存至: [bold magenta]{output_path}[/]")
+        console.print(f"\n[bold green]✓[/] Report successfully saved to: [bold magenta]{output_path}[/]")
     except Exception as e:
-        console.print(f"[bold red]✗ 无法保存文件:[/bold red] {e}")
+        console.print(f"[bold red]✗ Failed to save file:[/bold red] {e}")
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Google Authenticator 迁移数据提取工具 (免 Protobuf 编译版)"
+        description="Google Authenticator Data Extractor (Protobuf-free version)"
     )
     
-    parser.add_argument("inputs", nargs="*", help="URI 字符串、二维码图片路径或目录")
-    parser.add_argument("-o", "--output", type=Path, help="导出 Markdown 报告的文件路径")
+    parser.add_argument("inputs", nargs="*", help="Migration URIs, QR image paths, or directories")
+    parser.add_argument("-o", "--output", type=Path, help="Path to export the Markdown report")
     
-    # 接收来自 __main__.py 的参数分发
+    # Slice sys.argv to skip the 'google' command when parsing sub-arguments
     args = parser.parse_args(sys.argv[2:])
 
     final_uris = set()
 
-    # 1.处理命令行直接提供的输入
+    # 1. Process command-line inputs
     if args.inputs:
-        with console.status("[bold green]正在扫描输入源..."):
+        with console.status("[bold green]Scanning input sources..."):
             for item in args.inputs:
                 if item.startswith("otpauth-migration://"):
                     final_uris.add(item)
                 else:
-                    # 尝试作为文件路径扫描二维码
+                    # Treat input as a file path for QR scanning
                     uris_found = extract_uris_from_path(item)
                     final_uris.update(uris_found)
     
-    # 2. 交互模式
+    # 2. Interactive Mode if no input provided
     if not final_uris:
         console.print(Panel(
-            "未检测到输入数据。您可以：\n"
-            "1. 直接粘贴 [bold cyan]otpauth-migration://[/] 开头的 URI\n"
-            "2. 拖入包含二维码的 [bold cyan]图片文件[/] 或 [bold cyan]目录[/]\n"
-            "\n直接按下 [bold yellow]回车[/] 开始解析已输入的数据。", 
-            title="[bold cyan]Google Authenticator 提取器", 
+            "No input data detected. You can:\n"
+            "1. Paste a URI starting with [bold cyan]otpauth-migration://[/]\n"
+            "2. Drag and drop [bold cyan]image files[/] or [bold cyan]folders[/] containing QR codes\n"
+            "\nPress [bold yellow]Enter[/] without input to start processing.", 
+            title="[bold cyan]Google Authenticator Extractor", 
             border_style="cyan"
         ))
         
         while True:
-            val = Prompt.ask("[bold yellow]输入 URI/路径 (留空结束)[/]").strip()
+            val = Prompt.ask("[bold yellow]Enter URI/Path (Leave empty to finish)[/]").strip()
             if not val:
                 break
             if val.startswith("otpauth-migration://"):
@@ -81,41 +79,41 @@ def main():
                 uris_found = extract_uris_from_path(val)
                 if uris_found:
                     final_uris.update(uris_found)
-                    console.print(f"[dim]已从路径中提取 {len(uris_found)} 个 URI[/dim]")
+                    console.print(f"[dim]Extracted {len(uris_found)} URI(s) from path.[/dim]")
                 else:
-                    console.print("[red]未在指定路径发现有效的二维码或 URI。[/red]")
+                    console.print("[red]No valid QR codes or URIs found at the specified path.[/red]")
 
     if not final_uris:
-        console.print("[bold red]错误: 没有找到任何可处理的 Google 迁移数据。[/]")
+        console.print("[bold red]Error: No Google Migration data found to process.[/]")
         return
 
-    # 3. 解密与去重
+    # 3. Decryption and Deduplication
     all_accounts_map = {}
     try:
-        with console.status("[bold green]正在解密多批次数据..."):
+        with console.status("[bold green]Decrypting data batches..."):
             for uri in final_uris:
                 accounts = decrypt_google_auth_uri(uri)
                 for acc in accounts:
-                    # 使用 secret 作为 key 进行去重
+                    # Use totp_secret as unique key for deduplication
                     all_accounts_map[acc['totp_secret']] = acc
 
-        # 按服务商名称排序
+        # Sort accounts by issuer name for the final display
         final_accounts = sorted(all_accounts_map.values(), key=lambda x: x['issuer'].lower())
 
-        # 4. 展示结果表格
+        # 4. Display Result Table
         if not final_accounts:
-            console.print("[yellow]解析完成，但未发现有效的账户数据。[/yellow]")
+            console.print("[yellow]Parsing complete, but no valid accounts were found.[/yellow]")
             return
 
         table = Table(
-            title=f"\n成功提取 {len(final_accounts)} 个 2FA 账户", 
+            title=f"\nSuccessfully extracted {len(final_accounts)} 2FA account(s)", 
             header_style="bold magenta",
             border_style="dim"
         )
-        table.add_column("服务商 (Issuer)", style="cyan", no_wrap=True)
-        table.add_column("账户名称 (Name)", style="green")
-        table.add_column("密钥 (Base32 Secret)", style="bold yellow")
-        table.add_column("算法", justify="center")
+        table.add_column("Issuer", style="cyan", no_wrap=True)
+        table.add_column("Account Name", style="green")
+        table.add_column("Secret (Base32)", style="bold yellow")
+        table.add_column("Algorithm", justify="center")
         
         for acc in final_accounts:
             table.add_row(
@@ -127,15 +125,15 @@ def main():
         
         console.print("\n", table)
 
-        # 5. 执行导出逻辑
+        # 5. Export Report
         if args.output:
             _save_report(final_accounts, args.output)
         else:
-            console.print("\n[dim]提示: 使用 -o 参数可将结果导出为 Markdown 文件。[/dim]")
+            console.print("\n[dim]Hint: Use the '-o' flag to export results to a Markdown file.[/dim]")
 
     except Exception as e:
-        console.print(f"[bold red]致命解析错误: [/] {e}")
-        console.print("[dim]这可能是由于 URI 格式损坏或协议版本不兼容导致的。[/dim]")
+        console.print(f"[bold red]Fatal parsing error: [/] {e}")
+        console.print("[dim]This may be caused by corrupted URIs or incompatible protocol versions.[/dim]")
 
 if __name__ == "__main__":
     main()
