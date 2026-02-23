@@ -260,8 +260,8 @@ def _display_banner() -> str:
     console.print(
         Panel(
             plain_banner,
-            title="[bold white]Unsealer[/bold white]",
-            subtitle="[cyan]v3.3 Final Edition[/cyan]",
+            title="[bold white] Vespera [/bold white]",
+            subtitle="[cyan] -amber aurora- [/cyan]",
             border_style="cyan",
             expand=False,
         )
