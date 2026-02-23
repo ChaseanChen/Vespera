@@ -15,3 +15,18 @@ env/
 
 __pycache__/
 
+build/
+dist/
+bin/
+*.spec
+
+
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+ENV/
+
+.DS_Store
+.directory

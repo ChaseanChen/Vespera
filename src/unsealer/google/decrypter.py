@@ -12,13 +12,16 @@ def _parse_varint(data: bytes, pos: int):
     """
     res = 0
     shift = 0
-    while True:
+    while pos < len(data):
         b = data[pos]
         res |= (b & 0x7f) << shift
         pos += 1
         if not (b & 0x80):
             return res, pos
         shift += 7
+    return res, pos
+
+
 
 def _parse_message(data: bytes):
     """
@@ -30,18 +33,33 @@ def _parse_message(data: bytes):
     pos = 0
     res = {}
     while pos < len(data):
-        tag_and_type, pos = _parse_varint(data, pos)
+        curr_pos = pos
+        try:
+            tag_and_type, pos = _parse_varint(data, pos)
+        except IndexError:
+            break
+
+        if pos == curr_pos: break
+        
         tag = tag_and_type >> 3
         wire_type = tag_and_type & 0x07
         
         if wire_type == 0:  # Varint
             val, pos = _parse_varint(data, pos)
-        elif wire_type == 2:  # Length-delimited (String/Bytes/Nested)
+        elif wire_type == 1:  # 64-bit
+            val = data[pos:pos+8]
+            pos += 8
+        elif wire_type == 2:  # Length-delimited
             l, pos = _parse_varint(data, pos)
             val = data[pos:pos+l]
             pos += l
+        elif wire_type == 5:  # 32-bit
+            val = data[pos:pos+4]
+            pos += 4
+        elif wire_type in [3, 4]:
+            continue
         else:
-            raise ValueError(f"Unsupported wire type: {wire_type}")
+            raise ValueError(f"Unsupported wire type: {wire_type} at pos {pos}")
         
         if tag not in res:
             res[tag] = []
@@ -82,7 +100,7 @@ def decrypt_google_auth_uri(uri: str) -> List[Dict[str, Any]]:
             # Fields based on Protobuf definition:
             # 1: secret, 2: name, 3: issuer, 4: algorithm, 5: digits
             secret = otp_dict.get(1, [b''])[0]
-            name = otp_dict.get(2, [b'Unknown'])[0].decode('utf-8')
+            name = otp_dict.get(2, [b'Lost'])[0].decode('utf-8')
             issuer = otp_dict.get(3, [b''])[0].decode('utf-8')
             algo_idx = otp_dict.get(4, [1])[0]
             digit_idx = otp_dict.get(5, [1])[0]
@@ -96,7 +114,7 @@ def decrypt_google_auth_uri(uri: str) -> List[Dict[str, Any]]:
                 name = name.split(":", 1)[1].strip()
 
             accounts.append({
-                "issuer": issuer or "Unknown",
+                "issuer": issuer or "Lost",
                 "name": name,
                 "totp_secret": b32_secret,
                 "algorithm": ALGO_MAP.get(algo_idx, "SHA1"),
