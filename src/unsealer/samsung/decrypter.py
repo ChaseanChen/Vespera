@@ -1,21 +1,22 @@
 # src\unsealer\samsung\decrypter.py
 
-import base64
-import hashlib
-import csv
-import io
-import re
-import json
-import sys
-import binascii
+import base64     # 負責將編碼轉回為二進制
+import hashlib    # 負責哈希運算
+import csv        # 負責處理類似表格的數據
+import io         # 將文字變成流
+import re 
+import json       # 處理JSON格式的數據
+import sys        # 處理系統的錯誤
+import binascii   # 處理二進制和文本轉換
 from typing import List, Dict, Any, Union
 from pathlib import Path
 
 try:
-    from Crypto.Cipher import AES
-    from Crypto.Util.Padding import unpad
+    from Crypto.Cipher import AES         # 解密工具
+    from Crypto.Util.Padding import unpad # 去除加密補丁
 except ImportError:
-    print("错误：核心加密库 'pycryptodome' 未安装。请运行 'pip install pycryptodome'。")
+    print("Error: Core cryptographic library 'pycryptodome' is not installed.")
+    print("Please run 'pip install pycryptodome' to install.")
     raise
 
 # --- 从外部文件加载解析规则 ---
@@ -28,19 +29,16 @@ except (FileNotFoundError, json.JSONDecodeError) as e:
     sys.exit(1)
 
 
-# --- 加密参数常量 ---
-# 将“魔法数字”定义为常量，增强代码的可读性和可维护性
-SALT_SIZE = 20
-IV_SIZE = 16  # AES-128/256 CBC IV 长度为 16 字节
-KEY_SIZE = 32  # AES-256 密钥长度为 32 字节
+# --- 加密参数常量 --- #
+SALT_SIZE = 20 # 盐的长度 -> 20字节
+IV_SIZE = 16   # 初始向量长度 -> 16字节
+KEY_SIZE = 32  # 密钥长度 -> 32字节
 
-# PBKDF2的迭代次数 (70000) 由三星的加密标准决定，必须使用此数值才能成功解密
+# PBKDF2的迭代次数由三星的加密标准决定，必须使用此数值才能成功解密
 PBKDF2_ITERATIONS = 70000
 
 
 # --- 辅助解析函数 ---
-
-
 def _safe_b64_decode(b64_string: str) -> str:
     if not b64_string or b64_string.strip() in ["", "JiYmTlVMTCYmJg=="]:
         return ""
@@ -48,7 +46,6 @@ def _safe_b64_decode(b64_string: str) -> str:
         return base64.b64decode(b64_string).decode("utf-8")
     except (binascii.Error, UnicodeDecodeError):
         return b64_string
-
 
 def _parse_json_field(field_value: str) -> Union[Dict, str]:
     try:
@@ -58,7 +55,6 @@ def _parse_json_field(field_value: str) -> Union[Dict, str]:
         return json.loads(cleaned_value)
     except (json.JSONDecodeError, TypeError):
         return field_value
-
 
 def _parse_multi_b64_field(field_value: str) -> List[str]:
     if not field_value:
@@ -74,7 +70,6 @@ def _parse_multi_b64_field(field_value: str) -> List[str]:
             decoded_parts.append(decoded)
     return decoded_parts
 
-
 def clean_android_url(url: str) -> str:
     if not url or re.search(r"\.[a-zA-Z]{2,}", url) or url.startswith("http"):
         return url
@@ -85,9 +80,7 @@ def clean_android_url(url: str) -> str:
             return url
     return url
 
-
 # --- 核心解析逻辑 ---
-
 
 def parse_decrypted_content(decrypted_content: str) -> Dict[str, List[Dict[str, Any]]]:
     all_tables: Dict[str, List[Dict[str, Any]]] = {}
@@ -157,7 +150,6 @@ def parse_decrypted_content(decrypted_content: str) -> Dict[str, List[Dict[str, 
         raise ValueError("解密成功，但在文件中未找到任何有价值的数据。")
 
     return all_tables
-
 
 def decrypt_and_parse(
     file_content_bytes: bytes, password: str

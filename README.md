@@ -1,4 +1,4 @@
-# unsealer
+# Vespera unsealer
 
 > PyPI hasn't been updated yet. I will delete this sentence when I update it.
 
