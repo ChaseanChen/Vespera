@@ -16,7 +16,7 @@
 <div align = "center">
 
 [![GitHub Release](https://img.shields.io/github/v/release/ChaseanChen/Vespera?include_prereleases)](https://github.com/ChaseanChen/Vespera/releases)
-[![PyPI Version](https://img.shields.io/badge/pypi-v1.0.1-blue)](https://pypi.org/project/unsealer/)
+[![PyPI Version](https://img.shields.io/badge/pypi-v2.0.6-blue)](https://pypi.org/project/unsealer/)
 [![Python Versions](https://img.shields.io/badge/python-3.7+-brightgreen.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 

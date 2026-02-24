@@ -11,7 +11,9 @@ env/
 
 ./__pycache__/
 
+./src/unsealer.egg-info
 ./src/unsealer.egg-info/
+unsealer.egg-info/
 
 __pycache__/
 
