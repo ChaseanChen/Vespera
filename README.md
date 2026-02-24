@@ -46,8 +46,6 @@ You can obtain a backup in two ways:
 
 *   **Method A: Smart Switch (Desktop)**
     The `.spass` file is created via the [**Samsung Smart Switch**](https://www.samsung.com/us/support/owners/app/smart-switch) desktop app.
-
-    ![smart switch](./src/media/smart_switch.png)
     
     1. Connect your phone to your PC/Mac via USB.
     2. Open Smart Switch and select **"Backup"**.

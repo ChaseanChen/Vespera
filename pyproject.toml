@@ -6,11 +6,11 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "unsealer"
-version = "1.0.1"
+version = "2.0.5"
 authors = [
   { name="Chase Chen", email="eldric520lol@gmail.com" },
 ]
-description = "A multi-module tool that allows you to retrieve your digital credentials from services like Samsung Pass and Google Authenticator, and convert between them."
+description = "Decrypt Samsung Pass and Google Authenticator data"
 readme = "README.md"
 requires-python = ">=3.7"
 classifiers = [
