@@ -118,6 +118,12 @@ unsealer samsung ./my_backup.spass -f md -o ./report.md
 
 ### 2. Extract Google 2FA (Authenticator)
 
+<div align = "center">
+
+<img src="./src/media/authenticator wall.webp" width="400" alt="Google Authenticator Wallpaper">
+
+</div>
+
 ```bash
 # Extract from a migration string
 unsealer google "otpauth-migration://offline?data=..."
