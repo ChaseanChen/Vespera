@@ -3,13 +3,12 @@
 > [!NOTE]
 > **Reclaim Your Digital Freedom.** This project is designed to help users migrate digital assets from the Samsung ecosystem or Google Authenticator. Whether you want to break free from vendor lock-in, export "un-backupable" TOTP codes, or simply take true ownership of your private data, this tool is for you.
 > 
-> *The PyPI package is currently being synchronized. This notice will be removed once the latest version is live.*
 > 
 > *Note: As the original [**Unsealer**](https://github.com/Oracipher/Unsealer) project is under maintenance, I have archived the Unsealer repository and migrated the improved core code to this new repository (Vespera).*
 
 <div align = "center">
 
-<img src="https://github.com/ChaseanChen/Vespera/blob/main/src/media/favicon.ico" width="100" height="100" alt="Oracipher icon">
+<img src="https://raw.githubusercontent.com/ChaseanChen/Vespera/blob/main/src/media/favicon.ico" width="100" height="100" alt="Oracipher icon">
 
 </div>
 
@@ -56,7 +55,7 @@ You can obtain a backup in two ways:
 
 <div align = "center">
 
-<img src="https://github.com/ChaseanChen/Vespera/blob/main/src/media/smart_switch.png" width="50" height="50" alt="Smart Switch">
+<img src="https://raw.githubusercontent.com/ChaseanChen/Vespera/blob/main/src/media/smart_switch.png" width="50" height="50" alt="Smart Switch">
 
 </div>
 
@@ -120,7 +119,7 @@ unsealer samsung ./my_backup.spass -f md -o ./report.md
 
 <div align = "center">
 
-<img src="https://github.com/ChaseanChen/Vespera/blob/main/src/media/authenticator%20wall.webp" width="400" alt="Google Authenticator Wallpaper">
+<img src="https://raw.githubusercontent.com/ChaseanChen/Vespera/blob/main/src/media/authenticator%20wall.webp" width="400" alt="Google Authenticator Wallpaper">
 
 </div>
 
