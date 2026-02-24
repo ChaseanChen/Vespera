@@ -1,5 +1,3 @@
-# src/unsealer/samsung/decrypter.py
-
 import base64
 import hashlib
 import csv
@@ -37,7 +35,6 @@ IV_SIZE = 16    # AES Initialization Vector length in bytes
 KEY_SIZE = 32   # AES-256 key size in bytes
 
 # The iteration count is defined by Samsung's encryption standards.
-# 70,000 rounds are required for a successful key derivation.
 PBKDF2_ITERATIONS = 70000
 
 
@@ -56,7 +53,7 @@ def _safe_b64_decode(b64_string: str) -> str:
 def _parse_json_field(field_value: str) -> Union[Dict, str]:
     """Cleans and parses strings that contain nested JSON data."""
     try:
-        # Samsung data often escapes quotes; we need to clean them before parsing
+        # Clean escaped quotes before parsing
         cleaned_value = field_value.replace('\\"', '"').strip()
         if cleaned_value.startswith('"') and cleaned_value.endswith('"'):
             cleaned_value = cleaned_value[1:-1]
@@ -82,27 +79,27 @@ def _parse_multi_b64_field(field_value: str) -> List[str]:
     return decoded_parts
 
 def clean_android_url(url: str) -> str:
+    """Normalizes URL/App identifiers, removing internal protocol prefixes."""
     if not url:
         return ""
     
-    # 1. 如果是标准的 http 链接，直接返回
+    # 1. Return standard http/https links directly
     if url.startswith("http"):
         return url
         
-    # 2. 如果不以 android:// 开头，但包含域名特征（如 .com），保持原样
+    # 2. Keep strings that contain domain features even without the android protocol
     if not url.startswith("android://") and re.search(r"\.[a-zA-Z]{2,}", url):
         return url
         
-    # 3. 处理 android:// 协议
+    # 3. Handle android:// protocol
     if url.startswith("android://"):
-        # 按照“契约”：只有包含 @ 符号的才尝试提取最后的 Label 部分
+        # If standard "android://package@Label" format, extract the Label portion
         if "@" in url:
             try:
                 return url.split("@")[-1]
             except Exception:
                 return url
-        # 如果不包含 @，说明不是标准的 "android://package@Label" 格式
-        # 根据测试用例要求，这种异常格式应原样返回
+        # Return raw URL if it doesn't match the expected contract
         return url
             
     return url
@@ -110,9 +107,8 @@ def clean_android_url(url: str) -> str:
 # --- Core Parsing Logic ---
 
 def parse_decrypted_content(decrypted_content: str) -> Dict[str, List[Dict[str, Any]]]:
-    """Parses the raw decrypted text into structured tables based on the schema."""
+    """Parses raw decrypted text into structured tables based on the schema."""
     all_tables: Dict[str, List[Dict[str, Any]]] = {}
-    # The decrypted content consists of multiple tables separated by 'next_table'
     blocks = decrypted_content.split("next_table")
     unknown_table_count = 0
 
@@ -122,24 +118,24 @@ def parse_decrypted_content(decrypted_content: str) -> Dict[str, List[Dict[str, 
             continue
 
         try:
-            # The data format is semicolon-delimited CSV
+            # Data format is semicolon-delimited CSV
             reader = csv.DictReader(io.StringIO(clean_block), delimiter=";")
             headers = reader.fieldnames
             if not headers:
                 continue
 
-            # Identify the table type using the fingerprints defined in schema.json
+            # Identify table type using fingerprints from schema.json
             table_name = None
             schema = {}
             for name, sch in TABLE_SCHEMA.items():
                 fps = sch.get("fingerprint", [])
-                # 改进：只要匹配到指纹中的任何 1 个核心字段即可，不再要求 all()
+                # Match if any fingerprint field is present in the headers
                 if any(fp in headers for fp in fps):
                     table_name = name
                     schema = sch
                     break
 
-            # If no fingerprint matches, mark as unknown data
+            # Mark as unknown data if no fingerprints match
             if not table_name:
                 if "24" in headers and len(headers) == 1:
                     continue
@@ -160,7 +156,7 @@ def parse_decrypted_content(decrypted_content: str) -> Dict[str, List[Dict[str, 
                     if not raw_value:
                         continue
 
-                    # Apply specific parsing logic based on the field type
+                    # Apply specific parsing logic based on field type defined in schema
                     if field in schema.get("json_fields", []):
                         entry[field] = _parse_json_field(raw_value)
                     elif field in schema.get("multi_b64_fields", []):
@@ -192,14 +188,12 @@ def parse_decrypted_content(decrypted_content: str) -> Dict[str, List[Dict[str, 
 def decrypt_and_parse(
     file_content_bytes: bytes, password: str
 ) -> Dict[str, List[Dict[str, Any]]]:
-    """
-    Main entry point for decrypting and structured parsing of the .spass content.
-    """
+    """Derives AES key and decrypts the .spass binary payload."""
     try:
-        # The input file is a base64 encoded string containing the binary payload
+        # Decode the initial base64 wrapper from the file
         binary_data = base64.b64decode(file_content_bytes.decode("utf-8").strip())
 
-        # Partition the binary data into its cryptographic components
+        # Extract salt, IV, and the encrypted payload
         salt_end = SALT_SIZE
         iv_end = salt_end + IV_SIZE
 
@@ -209,7 +203,7 @@ def decrypt_and_parse(
             binary_data[iv_end:],
         )
 
-        # Derive the 256-bit AES key using PBKDF2 with SHA-256
+        # Derive the key using PBKDF2-HMAC-SHA256
         key = hashlib.pbkdf2_hmac(
             "sha256",
             password.encode("utf-8"),
@@ -224,7 +218,6 @@ def decrypt_and_parse(
             cipher.decrypt(encrypted_data), AES.block_size, style="pkcs7"
         )
 
-        # Parse the plain text result into structured objects
         return parse_decrypted_content(decrypted_data.decode("utf-8"))
 
     except (ValueError, binascii.Error):
