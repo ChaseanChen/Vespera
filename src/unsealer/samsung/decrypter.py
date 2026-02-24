@@ -132,7 +132,9 @@ def parse_decrypted_content(decrypted_content: str) -> Dict[str, List[Dict[str, 
             table_name = None
             schema = {}
             for name, sch in TABLE_SCHEMA.items():
-                if all(fp in headers for fp in sch.get("fingerprint", [])):
+                fps = sch.get("fingerprint", [])
+                # 改进：只要匹配到指纹中的任何 1 个核心字段即可，不再要求 all()
+                if any(fp in headers for fp in fps):
                     table_name = name
                     schema = sch
                     break

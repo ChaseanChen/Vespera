@@ -64,5 +64,19 @@
       "note_title",
       "note_detail"
     ]
+  },
+  "cards": {
+    "fingerprint": [
+      "card_number_encrypted",
+      "name_on_card"
+    ],
+    "useful_fields": [
+      "card_number_encrypted", 
+      "name_on_card", 
+      "expiration_month", 
+      "expiration_year", 
+      "reserved_4", 
+      "reserved_5"
+    ]
   }
 }
