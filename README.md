@@ -7,10 +7,20 @@
 > 
 > *Note: As the original [**Unsealer**](https://github.com/Oracipher/Unsealer) project is under maintenance, I have archived the Unsealer repository and migrated the improved core code to this new repository (Vespera).*
 
+<div align = "center">
+
+<img src="./src/media/favicon.ico" width="100" height="100" alt="Oracipher icon">
+
+</div>
+
+<div align = "center">
+
 [![GitHub Release](https://img.shields.io/github/v/release/ChaseanChen/Vespera?include_prereleases)](https://github.com/ChaseanChen/Vespera/releases)
 [![PyPI Version](https://img.shields.io/badge/pypi-v1.0.1-blue)](https://pypi.org/project/unsealer/)
 [![Python Versions](https://img.shields.io/badge/python-3.7+-brightgreen.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
+</div>
 
 **Take back your digital credentials.** Unsealer is a multi-module, open-source command-line utility designed to liberate your data from Samsung Pass (`.spass`) and Google Authenticator. It empowers you to securely decrypt and export sensitive information—including logins, identity details, addresses, and notes—into open, human-readable formats like CSV, TXT, or Markdown.
 
@@ -43,6 +53,12 @@ Whether you're migrating to a new password manager, creating a secure offline ba
 ### 1. Obtain Samsung `.spass` File
 
 You can obtain a backup in two ways:
+
+<div align = "center">
+
+<img src="./src/media/smart_switch.png" width="50" height="50" alt="Smart Switch">
+
+</div>
 
 *   **Method A: Smart Switch (Desktop)**
     The `.spass` file is created via the [**Samsung Smart Switch**](https://www.samsung.com/us/support/owners/app/smart-switch) desktop app.
