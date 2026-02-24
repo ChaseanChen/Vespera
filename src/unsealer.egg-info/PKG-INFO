@@ -1,3 +1,32 @@
+Metadata-Version: 2.4
+Name: unsealer
+Version: 2.0.5
+Summary: Decrypt Samsung Pass and Google Authenticator data
+Author-email: Chase Chen <eldric520lol@gmail.com>
+Project-URL: Homepage, https://github.com/ChaseanChen/Vespera
+Project-URL: Bug Tracker, https://github.com/Oracipher/Vespera/issues
+Keywords: samsung,google,authenticator,.spass,decrypt,password,manager,export
+Classifier: Programming Language :: Python :: 3
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Operating System :: OS Independent
+Classifier: Topic :: Security :: Cryptography
+Classifier: Topic :: Utilities
+Classifier: Environment :: Console
+Requires-Python: >=3.7
+Description-Content-Type: text/markdown
+License-File: LICENSE
+Requires-Dist: pycryptodome>=3.15.0
+Requires-Dist: rich
+Requires-Dist: pyfiglet
+Requires-Dist: protobuf>=4.21.0
+Requires-Dist: pyzbar
+Requires-Dist: pillow
+Provides-Extra: test
+Requires-Dist: pytest; extra == "test"
+Requires-Dist: pytest-mock; extra == "test"
+Requires-Dist: pytest-cov; extra == "test"
+Dynamic: license-file
+
 # Vespera Unsealer
 
 > [!NOTE]
