@@ -3,6 +3,7 @@
 import pytest
 import base64
 from unsealer.samsung.decrypter import _safe_b64_decode, _parse_json_field, parse_decrypted_content
+from unsealer.samsung.decrypter import _parse_multi_b64_field, clean_android_url
 
 def test_safe_b64_decode():
     """
@@ -53,3 +54,21 @@ def test_decryption_logic_failure():
     with pytest.raises(ValueError, match="Decryption failed"):
         # Provide completely non-Base64 bytes
         decrypt_and_parse(b"not-a-base64-string", "password")
+        
+def test_parse_multi_b64_field():
+    """
+    测试三星特有的多段 Base64 拼接解析
+    """
+    raw_field = "cGhvbmUx#1&&&cGhvbmUy#2"
+    result = _parse_multi_b64_field(raw_field)
+    
+    assert result == ["phone1", "phone2"]
+    assert _parse_multi_b64_field("JiYmTlVMTCYmJg==") == []
+
+def test_clean_android_url():
+    """
+    测试 Android App URL 的清洗逻辑
+    """
+    assert clean_android_url("android://com.example.app@MyBankingApp") == "MyBankingApp"
+    assert clean_android_url("https://github.com") == "https://github.com"
+    assert clean_android_url("android://no_at_symbol") == "android://no_at_symbol"

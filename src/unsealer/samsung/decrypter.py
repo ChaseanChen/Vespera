@@ -82,17 +82,30 @@ def _parse_multi_b64_field(field_value: str) -> List[str]:
     return decoded_parts
 
 def clean_android_url(url: str) -> str:
-    """Sanitizes Android-specific app URLs for better readability."""
-    if not url or re.search(r"\.[a-zA-Z]{2,}", url) or url.startswith("http"):
+    if not url:
+        return ""
+    
+    # 1. 如果是标准的 http 链接，直接返回
+    if url.startswith("http"):
         return url
+        
+    # 2. 如果不以 android:// 开头，但包含域名特征（如 .com），保持原样
+    if not url.startswith("android://") and re.search(r"\.[a-zA-Z]{2,}", url):
+        return url
+        
+    # 3. 处理 android:// 协议
     if url.startswith("android://"):
-        try:
-            # Extract the package name/label after the '@' symbol
-            return url.split("@")[-1]
-        except Exception:
-            return url
+        # 按照“契约”：只有包含 @ 符号的才尝试提取最后的 Label 部分
+        if "@" in url:
+            try:
+                return url.split("@")[-1]
+            except Exception:
+                return url
+        # 如果不包含 @，说明不是标准的 "android://package@Label" 格式
+        # 根据测试用例要求，这种异常格式应原样返回
+        return url
+            
     return url
-
 
 # --- Core Parsing Logic ---
 
