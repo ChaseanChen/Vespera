@@ -8,6 +8,7 @@ import sys
 import binascii
 from typing import List, Dict, Any, Union
 from pathlib import Path
+import urllib.parse
 
 # Attempt to import cryptographic primitives
 try:
@@ -18,9 +19,9 @@ except ImportError:
     print("Please install it by running: pip install pycryptodome")
     sys.exit(1)
 
+SCHEMA_PATH = Path(__file__).parent / "schema.json"
 # --- Load parsing rules from the schema file ---
 try:
-    SCHEMA_PATH = Path(__file__).parent / "schema.json"
     with open(SCHEMA_PATH, "r", encoding="utf-8") as f:
         TABLE_SCHEMA = json.load(f)
 except (FileNotFoundError, json.JSONDecodeError) as e:

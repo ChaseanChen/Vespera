@@ -13,7 +13,7 @@ from rich.prompt import Prompt
 from rich.text import Text
 import pyfiglet
 from .decrypter import decrypt_and_parse
-from typing import Dict, List, Any
+from typing import Dict, List, Any, Optional
 
 # --- Initialize the rich console ---
 console = Console(stderr=True)
@@ -202,7 +202,7 @@ def save_as_md(data: Dict[str, List[Any]], output_file: Path, banner: str):
 def save_as_json(
     data: Dict[str, List[Any]],
     output_file: Path,
-    banner: str = None):
+    banner: Optional[str] = None):
     with open(output_file, "w", encoding="utf-8") as f:
         json.dump(data, f, indent=4, ensure_ascii=False)
 
@@ -425,39 +425,6 @@ def _process_decryption(
             f.write(f"--- {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} ---\n")
             traceback.print_exc(file=f)
             f.write("\n")
-        sys.exit(1)
-
-
-def _process_packing(args, password):
-    """处理 JSON 到 .spass 的转换过程"""
-    try:
-        # 1. 尝试以 UTF-8 读取 JSON
-        if not args.input_file.exists():
-            raise FileNotFoundError(f"找不到输入文件: {args.input_file}")
-            
-        with open(args.input_file, "r", encoding="utf-8") as f:
-            data = json.load(f)
-            
-        # 2. 调用加密函数
-        with console.status("[bold green]正在生成三星加密备份文件...", spinner="bouncingBar"):
-            # 延迟导入以提高启动速度
-            from .decrypter import encrypt_and_seal
-            sealed_data = encrypt_and_seal(data, password)
-        
-        # 3. 写入二进制数据
-        args.output.write_bytes(sealed_data)
-        console.print(f"\n[bold green]✓ 封印成功！[/bold green]")
-        console.print(f"[cyan]> [/cyan]备份文件已保存至: [bold magenta]{args.output}[/bold magenta]")
-        console.print(f"[dim]提示: 你现在可以将此文件通过三星换机助手或三星云导入手机。[/dim]")
-
-    except json.JSONDecodeError:
-        console.print(f"[bold red]✗ 错误:[/] 输入文件不是有效的 JSON 格式。")
-        sys.exit(1)
-    except Exception as e:
-        console.print(f"[bold red]✗ 打包失败:[/] {str(e)}")
-        # 记录详细错误以便调试
-        with open("unsealer_pack_error.log", "a", encoding="utf-8") as f:
-            f.write(f"--- {datetime.now()} ---\n{traceback.format_exc()}\n")
         sys.exit(1)
 
 # main 函数建议保持你目前设计的“先计算路径、再统一询问密码、再分发任务”的流程。

@@ -2,12 +2,15 @@ import sys
 import argparse
 import json
 import qrcode
+
 from pathlib import Path
 from datetime import datetime
+
 from rich.console import Console
 from rich.table import Table
 from rich.panel import Panel
 from rich.prompt import Prompt
+
 from .decrypter import decrypt_google_auth_uri, create_google_migration_uri
 from .scanner import extract_uris_from_path
 

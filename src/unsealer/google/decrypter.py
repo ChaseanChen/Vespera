@@ -195,4 +195,5 @@ def create_google_migration_uri(accounts: List[Dict]) -> str:
     # 最终序列化
     encoded_data = base64.b64encode(all_params_bin).decode('utf-8')
     # 使用 quote 对数据进行 URL 编码是个好习惯（虽然在这个格式里通常不需要）
-    return f"otpauth-migration://offline?data={urllib.parse.quote(encoded_data)}"
+    safe_data = urllib.parse.quote(encoded_data)
+    return f"otpauth-migration://offline?data={safe_data}"
