@@ -30,6 +30,7 @@ dependencies = [
     "protobuf>=4.21.0",
     "pyzbar",
     "pillow",
+    "qrcode",
 ]
 # linux用户可能需要安装系统库
 # sudo apt-get install libzbar0

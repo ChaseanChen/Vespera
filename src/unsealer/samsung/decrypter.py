@@ -50,6 +50,7 @@ def _safe_b64_decode(b64_string: str) -> str:
         # Return raw string if decoding fails
         return b64_string
 
+
 def _parse_json_field(field_value: str) -> Union[Dict, str]:
     """Cleans and parses strings that contain nested JSON data."""
     try:
