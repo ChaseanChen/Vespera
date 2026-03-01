@@ -50,7 +50,7 @@ def main():
     subparsers.add_parser(
         "google",
         help="Decrypt and extract 2FA accounts from Google Authenticator export URIs.",
-        description="A specialized module for processing 'otpauth-migration://' URIs from Google Authenticator."
+        description="Extract and decrypt 2FA accounts from Google Authenticator export data to human-readable formats."
     )
 
     # --- Command Dispatching Logic ---
