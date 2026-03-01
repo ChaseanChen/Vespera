@@ -1,4 +1,4 @@
-# tests/test_samsung_decrypter.py
+# src/tests/test_samsung_decrypter.py
 
 import pytest
 import base64

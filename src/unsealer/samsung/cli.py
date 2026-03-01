@@ -1,19 +1,28 @@
+# src/unsealer/samsung/cli.py
+
 import argparse
 import sys
+
 import csv
-import os
 import re
 import traceback
 import json
 from pathlib import Path
+
 from datetime import datetime
+
 from rich.console import Console
 from rich.panel import Panel
 from rich.prompt import Prompt
 from rich.text import Text
 import pyfiglet
+
 from .decrypter import decrypt_and_parse
 from typing import Dict, List, Any, Optional
+
+
+from unsealer.common.exporter import DataExporter
+
 
 # --- Initialize the rich console ---
 console = Console(stderr=True)
@@ -365,98 +374,76 @@ def _setup_arg_parser() -> argparse.ArgumentParser:
     return parser
 
 
-def _process_decryption(
-    args: argparse.Namespace, password: str, plain_banner: str
-):
+def _process_decryption(args, password, plain_banner):
+    """核心处理流程"""
     try:
+        if not args.input_file.exists():
+            raise FileNotFoundError(f"File not found: {args.input_file}")
+
         file_content = args.input_file.read_bytes()
-        with console.status(
-            "[bold green]Decrypting and refining data...[/bold green]", spinner="dots"
-        ):
+        
+        with console.status("[bold green]Decrypting Samsung Pass data..."):
             all_tables = decrypt_and_parse(file_content, password)
 
-        TABLE_NAMES = {
-            "logins": "Login Credentials",
-            "identities": "Identity Info",
-            "addresses": "Address Info",
-            "notes": "Secure Memos",
-        }
+        # 打印简要概览
         summary = Text()
         for name, data in all_tables.items():
-            display_name = TABLE_NAMES.get(name, "Other Data")
-            summary.append(f"✓ [cyan]{display_name}[/cyan]: Found {len(data)} entries\n")
-
-        console.print(
-            Panel(
-                summary,
-                title="[bold green]✓ Decryption Successful[/bold green]",
-                border_style="green",
-            )
-        )
+            summary.append(f"✓ {name.upper()}: {len(data)} entries\n")
+        console.print(Panel(summary, title="Decryption Successful", border_style="green"))
 
         if args.preview:
-            console.print("[dim]> Preview mode: No files will be saved. Use -f and -o to export data.[/dim]")
             return
 
-        console.print(
-            f"[cyan]> [/cyan]Saving to [bold magenta]{args.output}[/bold magenta] (Format: [yellow]{args.format.upper()}[/yellow])..."
-        )
+        # 使用统一导出引擎
+        exporter = DataExporter(banner=plain_banner)
+        exporter.export(all_tables, args.output, args.format)
+        console.print(f"[bold green]✓[/] Data exported to [bold magenta]{args.output}[/]")
 
-        save_dispatch = {
-            "md": lambda data, path, banner: save_as_md(data, path, banner),
-            "txt": lambda data, path, banner: save_as_txt(data, path, banner),
-            "csv": lambda data, path, banner: save_as_csv(data, path),
-            "json": lambda data, path, banner: save_as_json(data, path),
-        }
-        save_dispatch[args.format](all_tables, args.output, plain_banner)
-
-        console.print(
-            f"\n[bold green]✓ Success![/bold green] Data exported to [bold magenta]{args.output}[/bold magenta]"
-        )
-
-    except (FileNotFoundError, ValueError) as e:
-        console.print(f"[bold red]✗ Error:[/bold red] {e}")
-        sys.exit(1)
-    except Exception:
-        console.print(
-            f"[bold red]✗ An unexpected internal error occurred.[/bold red] Details saved to `unsealer_error.log`."
-        )
-        with open("unsealer_error.log", "a", encoding="utf-8") as f:
-            f.write(f"--- {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} ---\n")
-            traceback.print_exc(file=f)
-            f.write("\n")
+    except Exception as e:
+        console.print(f"[bold red]✗ Error:[/bold red] {str(e)}")
         sys.exit(1)
 
-# main 函数建议保持你目前设计的“先计算路径、再统一询问密码、再分发任务”的流程。
-# 那个流程是非常清晰且正确的。
 
 def main():
-    plain_banner = _display_banner()
-    parser = _setup_arg_parser()
+    banner = _display_banner()
+    parser = argparse.ArgumentParser()
+    parser.add_argument("input_file", type=Path)
+    parser.add_argument("-f", "--format", choices=["md", "csv", "txt", "json"], default="md")
+    parser.add_argument("-o", "--output", type=Path)
+    parser.add_argument("--preview", action="store_true")
     
-    # 适配二级分发
+    # 注意：这里适配了 __main__.py 的二级分发
     args = parser.parse_args(sys.argv[2:])
+    
+    if not args.input_file.exists():
+        console.print(f"[bold red]Error:[/] File {args.input_file} not found.")
+        sys.exit(1)
 
-    # 1. 自动计算路径
     if not args.output and not args.preview:
-        if args.format == "csv":
-            sanitized_stem = _sanitize_filename(args.input_file.stem)
-            args.output = Path(f"{sanitized_stem}_csv_export")
-        else:
-            args.output = args.input_file.with_suffix(f".{args.format}")
+        args.output = args.input_file.with_suffix(f".{args.format}")
+        
 
-    # 2. 检查冲突
-    if args.output and not args.preview and not args.force:
-        if args.output.exists():
-            console.print(f"[bold red]✗ 错误:[/bold red] 输出目标已存在。使用 '-y' 强制覆盖。")
-            sys.exit(1)
+    password = Prompt.ask("[yellow]Enter Samsung Account Password[/]", password=True)
+    
+    try:
+        file_content = args.input_file.read_bytes()
+        with console.status("[bold green]Decrypting & Processing..."):
+            all_tables = decrypt_and_parse(file_content, password)
 
-    # 3. 获取密码
-    password = Prompt.ask("[bold yellow]> [/bold yellow]输入三星账号主密码", password=True)
+        if args.preview:
+            summary = Text()
+            for table, rows in all_tables.items():
+                summary.append(f"✓ {table.upper()}: {len(rows)} items\n")
+            console.print(Panel(summary, title="Decryption Successful"))
+            return
 
-    # 4. 执行解密提取
-    _process_decryption(args, password, plain_banner)
+        exporter = DataExporter(banner=banner)
+        exporter.export(all_tables, args.output, args.format)
+        console.print(f"\n[bold green]✓ Export Success:[/] [magenta]{args.output}[/]")
 
+    except Exception as e:
+        console.print(f"[bold red]Error:[/] {str(e)}")
+        sys.exit(1)
 
 if __name__ == "__main__":
     main()

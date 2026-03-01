@@ -1,4 +1,4 @@
-# tests/test_google_scanner.py
+# src/tests/test_google_scanner.py
 import pytest
 from pathlib import Path
 from unsealer.google import scanner

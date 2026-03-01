@@ -1,4 +1,4 @@
-# tests/test_samsung_cli.py
+# src/tests/test_samsung_cli.py
 
 import pytest
 import sys

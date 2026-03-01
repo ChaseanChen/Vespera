@@ -1,4 +1,4 @@
-# tests/test_google_decrypter.py
+# src/tests/test_google_decrypter.py
 
 import pytest
 import base64

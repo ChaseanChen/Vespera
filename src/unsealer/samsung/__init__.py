@@ -1,1 +1,1 @@
-# src\unsealer\samsung\__init__.py
+# src/unsealer/samsung/__init__.py

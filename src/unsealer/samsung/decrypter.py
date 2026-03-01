@@ -1,3 +1,5 @@
+# src/unsealer/samsung/decrypter.py
+
 import base64
 import hashlib
 import csv
@@ -169,7 +171,7 @@ def parse_decrypted_content(decrypted_content: str) -> Dict[str, List[Dict[str, 
                         entry[field] = raw_value
 
                 if entry:
-                    table_entries.append(entry)
+                    table_entries.append(_flatten_entry(entry))
 
             if table_entries:
                 all_tables[table_name] = table_entries
@@ -228,3 +230,42 @@ def decrypt_and_parse(
         )
     except Exception as e:
         raise ValueError(f"An unexpected error occurred during decryption: {str(e)}")
+    
+    
+def _flatten_entry(entry: Dict) -> Dict:
+    """核心修正：将嵌套 JSON 展平并映射语义化字段名"""
+    flattened = {}
+    # 字段语义映射表：将 Samsung 原始字段名转换为通用的、合理的名称
+    RENAME_MAP = {
+        "reserved_5": "bank_name",
+        "reserved_4": "card_brand",
+        "card_number_encrypted": "card_number",
+        "mIDCardNumber": "id_number",
+        "mUsername": "full_name",
+        "mBirthDay": "birth_date",
+        "password_value": "password",
+        "username_value": "username",
+        "credential_memo": "memo",
+        "note_title": "title",  # 增加映射，让笔记和账户在 Markdown 中标题对齐
+        "note_detail": "content",
+        "secret": "totp_secret",
+    }
+    
+    for k, v in entry.items():
+        # 1. 处理嵌套字典 (如 otp 字段, id_card_detail 字段)
+        if not v: continue
+        if isinstance(v, dict):
+            for sub_k, sub_v in v.items():
+                # 优先寻找映射名，找不到则组合名称
+                if not sub_v: continue
+                new_key = RENAME_MAP.get(sub_k, f"{k}_{sub_k}")
+                flattened[new_key] = sub_v
+        # 2. 处理多值列表 (如 identities 中的电话、邮件列表)
+        elif isinstance(v, list):
+            flattened[k] = " | ".join(map(str, v))
+        # 3. 处理普通字段
+        else:
+            new_key = RENAME_MAP.get(k, k)
+            flattened[new_key] = v
+            
+    return flattened

@@ -1,4 +1,4 @@
-# tests/test_google_cli.py
+# src/tests/test_google_cli.py
 import pytest
 import sys
 from pathlib import Path

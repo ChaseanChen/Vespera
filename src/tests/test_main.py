@@ -1,4 +1,4 @@
-# tests/test_main.py
+# src/tests/test_main.py
 import pytest
 import sys
 from unsealer.__main__ import main

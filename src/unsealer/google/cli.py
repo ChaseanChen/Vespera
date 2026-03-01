@@ -1,3 +1,5 @@
+# src/unsealer/google/cli.py
+
 import sys
 import argparse
 import json
@@ -13,36 +15,25 @@ from rich.prompt import Prompt
 # 注意：请确保同目录下的 decrypter.py 已同步更新
 from .decrypter import decrypt_google_auth_uri
 from .scanner import extract_uris_from_path
+from unsealer.common.exporter import DataExporter 
 
 # 初始化控制台，用于标准错误输出
 console = Console(stderr=True)
 
-def _save_report(accounts: list, output_path: Path):
-    """
-    将提取的账户信息保存为 Markdown 报告。
-    """
-    content = [
-        "# Google Authenticator Export Report",
-        f"- **Generated at**: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}",
-        "\n| No. | Issuer | Account Name | Secret (Base32) | Algorithm | Digits |",
-        "| :--- | :--- | :--- | :--- | :--- | :--- |"
-    ]
-    for i, acc in enumerate(accounts, 1):
-        content.append(
-            f"| {i} | {acc['issuer']} | {acc['name']} | `{acc['totp_secret']}` | "
-            f"{acc['algorithm']} | {acc['digits']} |"
-        )
-    
-    try:
-        output_path.write_text("\n".join(content), encoding="utf-8")
-        console.print(f"\n[bold green]✓[/] Report successfully saved to: [bold magenta]{output_path}[/]")
-    except Exception as e:
-        console.print(f"[bold red]✗ Failed to save file:[/bold red] {e}")
-
 def main():
-    parser = argparse.ArgumentParser(description="Google Authenticator Migrator")
-    parser.add_argument("inputs", nargs="*", help="URIs, QR images, or a JSON file to parse")
-    parser.add_argument("-o", "--output", type=Path, help="Export result (supports .md, .json)")
+    parser = argparse.ArgumentParser(
+        description="Google Authenticator Migrator"
+        )
+    parser.add_argument(
+        "inputs", 
+        nargs="*",
+        help="URIs, QR images, or a JSON file to parse"
+        )
+    parser.add_argument(
+        "-o", 
+        "--output", 
+        type=Path, 
+        help="Export result (supports .md, .json)")
     args = parser.parse_args(sys.argv[2:])
     all_accounts_map = {}
 
@@ -80,24 +71,32 @@ def main():
         console.print("[red]No accounts to process.[/red]")
         return
 
-    # 3. 显示概览表格
-    table = Table(title=f"Detected {len(final_accounts)} Accounts", header_style="bold magenta")
+    processed_accounts = []
+    
+    for acc in final_accounts:
+        processed_accounts.append({
+            "issuer": acc['issuer'],
+            "account": acc['name'],
+            "secret": acc['totp_secret'],
+            "algorithm": acc['algorithm'],
+            "digits": acc['digits'],
+            "type": "TOTP"
+        })
+    
+    payload = {"google_authenticator": processed_accounts}
+
+    table = Table(title=f"Decrypted {len(processed_accounts)} Accounts")
     table.add_column("Issuer", style="cyan")
     table.add_column("Account", style="green")
-    table.add_column("Algorithm")
-    for acc in final_accounts:
-        table.add_row(acc['issuer'], acc['name'], acc['algorithm'])
+    for row in processed_accounts:
+        table.add_row(row['issuer'], row['name'])
     console.print(table)
 
-    # 4. 检查输出格式
     if args.output:
-        suffix = args.output.suffix.lower()
-        if suffix == ".json":
-            args.output.write_text(json.dumps(final_accounts, indent=4, ensure_ascii=False), encoding='utf-8')
-            console.print(f"[green]✓ Exported JSON to {args.output}[/green]")
-        else:
-            # 默认导出为 markdown，不再判断是否为图片
-            _save_report(final_accounts, args.output)
+        fmt = args.output.suffix[1:] if args.output.suffix else "md"
+        exporter = DataExporter(banner="GOOGLE AUTHENTICATOR EXPORT")
+        exporter.export(payload, args.output, fmt)
+        console.print(f"[bold green]✓ Export Success:[/] [magenta]{args.output}[/]")
 
 if __name__ == "__main__":
     main()

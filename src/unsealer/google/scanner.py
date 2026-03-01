@@ -1,3 +1,5 @@
+# src/unsealer/google/scanner.py
+
 import os
 from pathlib import Path
 from PIL import Image
